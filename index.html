@@ -266,3 +266,271 @@ typeStory();
 
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Driss et l'Émission Infinie</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        overflow: hidden;
+    }
+
+    #game-container {
+        background: rgba(0,0,0,0.8);
+        padding: 20px 30px;
+        border-radius: 15px;
+        box-shadow: 0 0 20px #00ffff;
+        max-width: 700px;
+        width: 90%;
+        text-align: center;
+        position: relative;
+    }
+
+    h1 {
+        margin-top: 0;
+        font-family: 'Orbitron', sans-serif;
+        color: #00ffff;
+        text-shadow: 0 0 5px #0ff, 0 0 10px #0ff;
+    }
+
+    #story-text {
+        font-size: 1.2em;
+        min-height: 120px;
+        white-space: pre-wrap;
+        margin-bottom: 20px;
+        color: #0ff;
+        text-shadow: 0 0 3px #0ff;
+    }
+
+    .question { font-size: 1.4em; margin: 20px 0; transition: 0.5s; }
+
+    .answers button {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+        padding: 15px;
+        font-size: 1.1em;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.3s;
+        background: linear-gradient(90deg, #00ffff, #0080ff);
+        color: #000;
+        font-weight: bold;
+        box-shadow: 0 0 10px #0ff;
+    }
+
+    .answers button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px #0ff;
+    }
+
+    #score {
+        margin-top: 20px;
+        font-weight: bold;
+        font-size: 1.2em;
+    }
+
+    /* Effet de progression de difficulté */
+    .question.easy { color: #00ff00; }
+    .question.medium { color: #ffff00; }
+    .question.hard { color: #ff4500; }
+    .question.very-hard { color: #ff0000; }
+
+</style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>Driss et l'Émission Infinie</h1>
+
+    <div id="story">
+        <div id="story-text"></div>
+        <button id="start-btn" style="display:none;">Commencer le jeu</button>
+    </div>
+
+    <div id="quiz" style="display:none;">
+        <div class="question" id="question-text"></div>
+        <div class="answers" id="answers-container"></div>
+        <div id="score"></div>
+    </div>
+
+    <div id="end" style="display:none;">
+        <h2 id="end-title"></h2>
+        <p id="end-story"></p>
+        <button id="restart-btn">Rejouer</button>
+    </div>
+</div>
+
+<audio id="correct-sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+<audio id="wrong-sound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
+<audio id="bg-music" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" loop></audio>
+
+<script>
+const storyLines = [
+    "Driss, un homme ordinaire, se réveille chaque matin...",
+    "Il découvre qu’il est assis devant un écran géant, exactement comme la veille.",
+    "La musique d’intro résonne, les lumières s’allument, et l’animateur lui sourit.",
+    "Le seul moyen de se libérer est de répondre correctement à au moins 10 questions sur 20."
+];
+
+let currentStoryIndex = 0;
+let charIndex = 0;
+
+const storyText = document.getElementById("story-text");
+const startBtn = document.getElementById("start-btn");
+const restartBtn = document.getElementById("restart-btn");
+const storyDiv = document.getElementById("story");
+const quizDiv = document.getElementById("quiz");
+const endDiv = document.getElementById("end");
+
+const correctSound = document.getElementById("correct-sound");
+const wrongSound = document.getElementById("wrong-sound");
+const bgMusic = document.getElementById("bg-music");
+
+const questions = [
+    {q: "Quelle est la capitale de la France ?", a:["Londres","Paris","Rome"], correct:1},
+    {q: "Combien de continents y a-t-il sur Terre ?", a:["5","6","7"], correct:2},
+    {q: "Quelle couleur obtient-on en mélangeant du bleu et du jaune ?", a:["Vert","Orange","Violet"], correct:0},
+    {q: "Combien de côtés a un triangle ?", a:["3","4","5"], correct:0},
+    {q: "Quel animal est connu comme le roi de la jungle ?", a:["Tigre","Lion","Éléphant"], correct:1},
+    {q: "Qui a écrit Les Misérables ?", a:["Victor Hugo","Émile Zola","Albert Camus"], correct:0},
+    {q: "Quelle planète est la plus proche du Soleil ?", a:["Mercure","Vénus","Mars"], correct:0},
+    {q: "Quel est le symbole chimique de l’eau ?", a:["O₂","CO₂","H₂O"], correct:2},
+    {q: "Combien de joueurs y a-t-il dans une équipe de football sur le terrain ?", a:["10","11","12"], correct:1},
+    {q: "Dans quel pays se trouve la ville de Kyoto ?", a:["Chine","Japon","Corée du Sud"], correct:1},
+    {q: "Quelle est la racine carrée de 144 ?", a:["11","12","14"], correct:1},
+    {q: "Qui a peint La Nuit étoilée ?", a:["Monet","Van Gogh","Picasso"], correct:1},
+    {q: "Quel gaz est le plus abondant dans l’atmosphère terrestre ?", a:["Oxygène","Azote","Dioxyde de carbone"], correct:1},
+    {q: "Combien de lettres y a-t-il dans le mot encyclopédie ?", a:["12","13","14"], correct:1},
+    {q: "Qui a découvert la pénicilline ?", a:["Alexander Fleming","Marie Curie","Louis Pasteur"], correct:0},
+    {q: "En quelle année l’homme a-t-il marché sur la Lune pour la première fois ?", a:["1965","1969","1971"], correct:1},
+    {q: "Quel est le plus grand océan du monde ?", a:["Atlantique","Pacifique","Indien"], correct:1},
+    {q: "Quel est le carré de 17 ?", a:["289","297","307"], correct:0},
+    {q: "Combien de chromosomes humains y a-t-il dans chaque cellule somatique ?", a:["42","46","48"], correct:1},
+    {q: "Quel est le nom du plus long fleuve du monde ?", a:["Amazone","Nil","Mississippi"], correct:1},
+];
+
+let currentQuestion = 0;
+let score = 0;
+
+// Typing effect for intro
+function typeStory() {
+    if(currentStoryIndex < storyLines.length) {
+        let line = storyLines[currentStoryIndex];
+        if(charIndex < line.length) {
+            storyText.textContent += line.charAt(charIndex);
+            charIndex++;
+            setTimeout(typeStory, 30);
+        } else {
+            storyText.textContent += "\n\n";
+            currentStoryIndex++;
+            charIndex = 0;
+            setTimeout(typeStory, 500);
+        }
+    } else {
+        startBtn.style.display = "inline-block";
+    }
+}
+
+startBtn.addEventListener("click", startGame);
+restartBtn.addEventListener("click", restartGame);
+
+function startGame() {
+    storyDiv.style.display = "none";
+    quizDiv.style.display = "block";
+    bgMusic.play();
+    showQuestion();
+}
+
+function showQuestion() {
+    const q = questions[currentQuestion];
+    const questionText = document.getElementById("question-text");
+    questionText.textContent = `Question ${currentQuestion+1}: ${q.q}`;
+
+    if(currentQuestion < 5) questionText.className = "question easy";
+    else if(currentQuestion < 10) questionText.className = "question medium";
+    else if(currentQuestion < 15) questionText.className = "question hard";
+    else questionText.className = "question very-hard";
+
+    const answersContainer = document.getElementById("answers-container");
+    answersContainer.innerHTML = "";
+    q.a.forEach((answer, index) => {
+        const btn = document.createElement("button");
+        btn.textContent = answer;
+        btn.addEventListener("click", () => selectAnswer(index));
+        answersContainer.appendChild(btn);
+    });
+    document.getElementById("score").textContent = `Score actuel: ${score}`;
+}
+
+function selectAnswer(index) {
+    if(index === questions[currentQuestion].correct) {
+        score++;
+        correctSound.play();
+    } else {
+        wrongSound.play();
+    }
+    currentQuestion++;
+    if(currentQuestion < questions.length) {
+        showQuestion();
+    } else {
+        endGame();
+    }
+}
+
+function endGame() {
+    quizDiv.style.display = "none";
+    endDiv.style.display = "block";
+    bgMusic.pause();
+    bgMusic.currentTime = 0;
+
+    const endTitle = document.getElementById("end-title");
+    const endStory = document.getElementById("end-story");
+
+    if(score >= 10) {
+        endTitle.textContent = "Libération ! 🎉";
+        endStory.textContent = `Driss a répondu correctement à ${score} questions. Merci d’avoir joué !\nLa TV s’éteint…`;
+        // TV off effect
+        document.body.style.transition = "background 2s, color 2s";
+        document.body.style.background = "black";
+        document.body.style.color = "black";
+    } else {
+        endTitle.textContent = "Encore coincé... 😢";
+        endStory.textContent = `Driss n’a répondu correctement qu’à ${score} questions.\nLa boucle recommence…`;
+        // Boucle : retour au début après 3 secondes
+        setTimeout(() => {
+            location.reload();
+        }, 3000);
+    }
+}
+
+function restartGame() {
+    currentQuestion = 0;
+    score = 0;
+    endDiv.style.display = "none";
+    storyDiv.style.display = "block";
+    storyText.textContent = "";
+    currentStoryIndex = 0;
+    charIndex = 0;
+    startBtn.style.display = "none";
+    typeStory();
+}
+
+typeStory();
+</script>
+
+</body>
+</html>
