@@ -20,7 +20,7 @@
     }
 
     #game-container {
-        background: rgba(0,0,0,0.85);
+        background: rgba(0,0,0,0.8);
         padding: 20px 30px;
         border-radius: 15px;
         box-shadow: 0 0 20px #00ffff;
@@ -76,18 +76,12 @@
         font-size: 1.2em;
     }
 
-    #comment {
-        margin-top: 15px;
-        font-style: italic;
-        color: #ff0;
-        min-height: 20px;
-    }
-
-    /* Couleurs par difficulté */
+    /* Effet de progression de difficulté */
     .question.easy { color: #00ff00; }
     .question.medium { color: #ffff00; }
     .question.hard { color: #ff4500; }
     .question.very-hard { color: #ff0000; }
+
 </style>
 </head>
 <body>
@@ -104,7 +98,6 @@
         <div class="question" id="question-text"></div>
         <div class="answers" id="answers-container"></div>
         <div id="score"></div>
-        <div id="comment"></div>
     </div>
 
     <div id="end" style="display:none;">
@@ -120,10 +113,10 @@
 
 <script>
 const storyLines = [
-    "Driss se réveille un matin et découvre un écran géant devant lui...",
-    "Une musique kitsch résonne et un animateur apparaît avec un sourire… un peu trop confiant.",
-    "Driss comprend vite qu'il est coincé dans cette émission.",
-    "Le seul moyen de sortir est de répondre correctement à au moins 10 questions sur 20."
+    "Driss, un homme ordinaire, se réveille chaque matin...",
+    "Il découvre qu’il est assis devant un écran géant, exactement comme la veille.",
+    "La musique d’intro résonne, les lumières s’allument, et l’animateur lui sourit.",
+    "Le seul moyen de se libérer est de répondre correctement à au moins 10 questions sur 20."
 ];
 
 let currentStoryIndex = 0;
@@ -136,30 +129,38 @@ const storyDiv = document.getElementById("story");
 const quizDiv = document.getElementById("quiz");
 const endDiv = document.getElementById("end");
 const gameContainer = document.getElementById("game-container");
-const commentDiv = document.getElementById("comment");
 
 const correctSound = document.getElementById("correct-sound");
 const wrongSound = document.getElementById("wrong-sound");
 const bgMusic = document.getElementById("bg-music");
 
-// Questions avec réponses et remarques humoristiques
 const questions = [
-    {q:"Quelle est la capitale de la France ?", a:["Londres","Paris","Rome"], correct:1, comment:["Oups, même pas en rêve…","Parfait ! Tu sais lire une carte !","Hmm… pas tout à fait."]},
-    {q:"Combien de continents y a-t-il sur Terre ?", a:["5","6","7"], correct:2, comment:["Trop peu…","Pas encore !","Exact ! Bravo !"]},
-    {q:"Quelle couleur obtient-on en mélangeant du bleu et du jaune ?", a:["Vert","Orange","Violet"], correct:0, comment:["Non… pas celui-là.","Incorrect !","Oui, simple et efficace !"]},
-    {q:"Combien de côtés a un triangle ?", a:["3","4","5"], correct:0, comment:["Non, Driss !","Encore raté !","Oui, un triangle c’est 3 !"]},
-    {q:"Quel animal est connu comme le roi de la jungle ?", a:["Tigre","Lion","Éléphant"], correct:1, comment:["Pas vraiment…","Non !","Exact, c’est bien le lion !"]},
-    {q:"Qui a écrit Les Misérables ?", a:["Victor Hugo","Émile Zola","Albert Camus"], correct:0, comment:["Faux…","Pas cette fois.","Oui ! Victor Hugo !"]},
-    {q:"Quelle planète est la plus proche du Soleil ?", a:["Mercure","Vénus","Mars"], correct:0, comment:["Non !","Faux…","Exact ! Mercure !"]},
-    {q:"Quel est le symbole chimique de l’eau ?", a:["O₂","CO₂","H₂O"], correct:2, comment:["Pas du tout !","Non…","Parfait, H₂O !"]},
-    {q:"Combien de joueurs y a-t-il dans une équipe de football sur le terrain ?", a:["10","11","12"], correct:1, comment:["Presque…","Non !","Oui, 11 joueurs !"]},
-    {q:"Dans quel pays se trouve la ville de Kyoto ?", a:["Chine","Japon","Corée du Sud"], correct:1, comment:["Faux !","Non…","Exact, c’est au Japon !"]},
+    {q: "Quelle est la capitale de la France ?", a:["Londres","Paris","Rome"], correct:1},
+    {q: "Combien de continents y a-t-il sur Terre ?", a:["5","6","7"], correct:2},
+    {q: "Quelle couleur obtient-on en mélangeant du bleu et du jaune ?", a:["Vert","Orange","Violet"], correct:0},
+    {q: "Combien de côtés a un triangle ?", a:["3","4","5"], correct:0},
+    {q: "Quel animal est connu comme le roi de la jungle ?", a:["Tigre","Lion","Éléphant"], correct:1},
+    {q: "Qui a écrit Les Misérables ?", a:["Victor Hugo","Émile Zola","Albert Camus"], correct:0},
+    {q: "Quelle planète est la plus proche du Soleil ?", a:["Mercure","Vénus","Mars"], correct:0},
+    {q: "Quel est le symbole chimique de l’eau ?", a:["O₂","CO₂","H₂O"], correct:2},
+    {q: "Combien de joueurs y a-t-il dans une équipe de football sur le terrain ?", a:["10","11","12"], correct:1},
+    {q: "Dans quel pays se trouve la ville de Kyoto ?", a:["Chine","Japon","Corée du Sud"], correct:1},
+    {q: "Quelle est la racine carrée de 144 ?", a:["11","12","14"], correct:1},
+    {q: "Qui a peint La Nuit étoilée ?", a:["Monet","Van Gogh","Picasso"], correct:1},
+    {q: "Quel gaz est le plus abondant dans l’atmosphère terrestre ?", a:["Oxygène","Azote","Dioxyde de carbone"], correct:1},
+    {q: "Combien de lettres y a-t-il dans le mot encyclopédie ?", a:["12","13","14"], correct:1},
+    {q: "Qui a découvert la pénicilline ?", a:["Alexander Fleming","Marie Curie","Louis Pasteur"], correct:0},
+    {q: "En quelle année l’homme a-t-il marché sur la Lune pour la première fois ?", a:["1965","1969","1971"], correct:1},
+    {q: "Quel est le plus grand océan du monde ?", a:["Atlantique","Pacifique","Indien"], correct:1},
+    {q: "Quel est le carré de 17 ?", a:["289","297","307"], correct:0},
+    {q: "Combien de chromosomes humains y a-t-il dans chaque cellule somatique ?", a:["42","46","48"], correct:1},
+    {q: "Quel est le nom du plus long fleuve du monde ?", a:["Amazone","Nil","Mississippi"], correct:1},
 ];
 
 let currentQuestion = 0;
 let score = 0;
 
-// Typing effect
+// Typing effect for intro
 function typeStory() {
     if(currentStoryIndex < storyLines.length) {
         let line = storyLines[currentStoryIndex];
@@ -181,31 +182,32 @@ function typeStory() {
 startBtn.addEventListener("click", startGame);
 restartBtn.addEventListener("click", restartGame);
 
-// Effet léger TV
+// Effet TV scintillante
 function tvFlicker() {
-    const intensity = Math.random() * 10;
+    const intensity = Math.random() * 10; // légère variation
     gameContainer.style.boxShadow = `0 0 ${intensity*2}px #0ff`;
     gameContainer.style.transform = `translate(${Math.random()*2}px, ${Math.random()*2}px)`;
 }
-
-let flickerInterval;
 
 function startGame() {
     storyDiv.style.display = "none";
     quizDiv.style.display = "block";
     bgMusic.play();
-    flickerInterval = setInterval(tvFlicker, 100);
     showQuestion();
+    flickerInterval = setInterval(tvFlicker, 100); // TV scintille
 }
+
+let flickerInterval;
 
 function showQuestion() {
     const q = questions[currentQuestion];
     const questionText = document.getElementById("question-text");
     questionText.textContent = `Question ${currentQuestion+1}: ${q.q}`;
 
-    if(currentQuestion < 3) questionText.className = "question easy";
-    else if(currentQuestion < 6) questionText.className = "question medium";
-    else questionText.className = "question hard";
+    if(currentQuestion < 5) questionText.className = "question easy";
+    else if(currentQuestion < 10) questionText.className = "question medium";
+    else if(currentQuestion < 15) questionText.className = "question hard";
+    else questionText.className = "question very-hard";
 
     const answersContainer = document.getElementById("answers-container");
     answersContainer.innerHTML = "";
@@ -216,24 +218,20 @@ function showQuestion() {
         answersContainer.appendChild(btn);
     });
     document.getElementById("score").textContent = `Score actuel: ${score}`;
-    commentDiv.textContent = "";
 }
 
 function selectAnswer(index) {
-    const q = questions[currentQuestion];
-    if(index === q.correct) {
+    if(index === questions[currentQuestion].correct) {
         score++;
         correctSound.play();
     } else {
         wrongSound.play();
     }
-    commentDiv.textContent = q.comment[index];
-
     currentQuestion++;
     if(currentQuestion < questions.length) {
-        setTimeout(showQuestion, 800); // laisse le temps de lire la remarque
+        showQuestion();
     } else {
-        setTimeout(endGame, 1000);
+        endGame();
     }
 }
 
@@ -250,6 +248,7 @@ function endGame() {
     if(score >= 10) {
         endTitle.textContent = "Libération ! 🎉";
         endStory.textContent = `Driss a répondu correctement à ${score} questions. Merci d’avoir joué !\nLa TV s’éteint…`;
+        // TV off effect
         document.body.style.transition = "background 2s, color 2s";
         document.body.style.background = "black";
         document.body.style.color = "black";
@@ -258,19 +257,21 @@ function endGame() {
     } else {
         endTitle.textContent = "Encore coincé... 😢";
         endStory.textContent = `Driss n’a répondu correctement qu’à ${score} questions.\nLa boucle recommence…`;
-        setTimeout(restartGame, 3000);
+        setTimeout(() => {
+            location.reload();
+        }, 3000);
     }
 }
 
 function restartGame() {
     currentQuestion = 0;
     score = 0;
-    currentStoryIndex = 0;
-    charIndex = 0;
-    storyText.textContent = "";
-    startBtn.style.display = "none";
     endDiv.style.display = "none";
     storyDiv.style.display = "block";
+    storyText.textContent = "";
+    currentStoryIndex = 0;
+    charIndex = 0;
+    startBtn.style.display = "none";
     typeStory();
 }
 
